@@ -15,12 +15,23 @@ import java.util.*
 
 interface GitHubService {
     @GET("orgs/{org}/repos?per_page=100")
-    fun getOrgRepos(
+    suspend fun getOrgRepos(
         @Path("org") org: String
     ): Call<List<Repo>>
 
     @GET("repos/{owner}/{repo}/contributors?per_page=100")
-    fun getRepoContributors(
+    suspend fun getRepoContributors(
+        @Path("owner") owner: String,
+        @Path("repo") repo: String
+    ): Call<List<User>>
+
+    @GET("orgs/{org}/repos?per_page=100")
+    fun getOrgReposCall(
+        @Path("org") org: String
+    ): Call<List<Repo>>
+
+    @GET("repos/{owner}/{repo}/contributors?per_page=100")
+    fun getRepoContributorsCall(
         @Path("owner") owner: String,
         @Path("repo") repo: String
     ): Call<List<User>>
