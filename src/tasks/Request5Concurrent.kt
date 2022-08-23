@@ -6,9 +6,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 
-suspend fun loadContributorsConcurrent(
-    service: GitHubService, req: RequestData
-): List<User> = coroutineScope {
+suspend fun loadContributorsConcurrent(service: GitHubService, req: RequestData): List<User> = coroutineScope {
     val repos = service
         .getOrgRepos(req.org)
         .also { logRepos(req, it) }
