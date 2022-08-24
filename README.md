@@ -1,5 +1,20 @@
 [![official JetBrains project](https://jb.gg/badges/official.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
+## NotCancellable
+ GlobalScpe를 사용해 cancel을 회피
+```kotlin
+    val deferreds: List<Deferred<List<User>>> = repos.map { repo ->
+        GlobalScope.async {
+            log("starting loading for ${repo.name}")
+            delay(3000)
+            service.getRepoContributors(req.org, repo.name)
+                .also { logUsers(repo, it) }
+                .bodyList()
+        }
+    }
+    deferreds.awaitAll()
+```
+
 
 ## CONCURRENT
 
