@@ -1,5 +1,37 @@
 [![official JetBrains project](https://jb.gg/badges/official.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
+
+## Showing progress
+Dispatchers.Default에서 작업을 하고 withContext(Dispatchers.Main)으로 작업마다 전달
+```kotlin
+suspend fun loadContributorsProgress(
+    service: GitHubService,
+    req: RequestData,
+    updateResults: suspend (List<User>, completed: Boolean) -> Unit
+) {
+    val repos = ...
+
+    var allUsers = emptyList<User>()
+    for ((index, repo) in repos.withIndex()) {
+        val users = service.getRepoContributors(req.org, repo.name)
+            .also { logUsers(repo, it) }
+            .bodyList()
+
+        allUsers = (allUsers + users).aggregate()
+        updateResults(allUsers, index == repos.lastIndex)
+    }
+}
+
+// used
+launch(Dispatchers.Default) {
+    loadContributorsProgress(service, req) { users, completed ->
+        withContext(Dispatchers.Main) {
+            updateResults(users, startTime, completed)
+        }
+    }
+}
+```
+
 ## NotCancellable
  GlobalScope는 coroutineScope의 자식이 아니라 cancel을 회피
 ```kotlin
