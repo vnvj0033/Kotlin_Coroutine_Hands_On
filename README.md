@@ -1,5 +1,43 @@
 [![official JetBrains project](https://jb.gg/badges/official.svg)](https://confluence.jetbrains.com/display/ALL/JetBrains+on+GitHub)
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
+## channel
+Channel은 recive를 실행하면 send를 대기 sned를 받아 updateResult실행
+버퍼를 이용해 빠름
+```kotlin
+suspend fun loadContributorsChannels(
+    service: GitHubService,
+    req: RequestData,
+    updateResults: suspend (List<User>, completed: Boolean) -> Unit) = coroutineScope {
+    val repos = ...
+
+    val channel = Channel<List<User>>()
+    for (repo in repos) {
+        launch {
+            val users = service.getRepoContributors(req.org, repo.name)
+                .also { logUsers(repo, it) }
+                .bodyList()
+            channel.send(users)
+        }
+    }
+    var allUsers = emptyList<User>()
+    repeat(repos.size) {
+        val users = channel.receive()
+        allUsers = (allUsers + users).aggregate()
+        updateResults(allUsers, it == repos.lastIndex)
+    }
+}
+
+
+// used to
+launch(Dispatchers.Default) {
+    loadContributorsChannels(service, req) { users, completed ->
+        withContext(Dispatchers.Main) {
+            updateResults(users, startTime, completed)
+        }
+    }
+}
+```
+
 
 ## Showing progress
 Dispatchers.Default에서 작업을 하고 withContext(Dispatchers.Main)으로 작업마다 전달
